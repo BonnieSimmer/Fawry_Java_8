@@ -4,6 +4,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.stream.Stream;
+
 public class StreamsExample {
 
     public static void main(final String[] args) {
@@ -22,34 +27,104 @@ public class StreamsExample {
             .stream()
             .forEach(authorPrintConsumer);
 
+        banner("Authors information - lambda");
         // SOLVED With functional interfaces used directly
         authors
             .stream()
             .forEach(System.out::println);
 
         banner("Active authors");
-        // TODO With functional interfaces declared
+        // SOLVED With functional interfaces declared
+        Consumer<Author> activeAuthorPrintConsumer = new Consumer<Author>() {
+            @Override
+            public void accept(Author author) {
+                if (author.active) {
+                    System.out.println(author);
+                }
+            }
+        };
+        authors
+                .stream()
+                .forEach(activeAuthorPrintConsumer);
 
         banner("Active authors - lambda");
-        // TODO With functional interfaces used directly
+        // SOLVED With functional interfaces used directly
+        authors
+                .stream()
+                .filter(author -> author.active)
+                .forEach(System.out::println);
 
-        banner("Active books for all authors");
-        // TODO With functional interfaces declared
+        banner("Active books for all authors"); // I will be assuming that "active books" means published books
+        // SOLVED With functional interfaces declared
+        Consumer<Author> activeBooksPrintConsumer = new Consumer<Author>() {
+            @Override
+            public void accept(Author author) {
+                for (Book book : author.books) {
+                    if (book.published) {
+                        System.out.println(book);
+                    }
+                }
+            }
+        };
+        authors
+                .stream()
+                .forEach(activeBooksPrintConsumer);
 
         banner("Active books for all authors - lambda");
-        // TODO With functional interfaces used directly
+        // SOLVED With functional interfaces used directly
+        authors.stream()
+                .flatMap(author -> author.books.stream())
+                .filter(book ->  book.published)
+                .forEach(System.out::println);
 
         banner("Average price for all books in the library");
-        // TODO With functional interfaces declared
+        // SOLVED With functional interfaces declared
+        Function<Author, Stream<Book>> bookStreamGetterFunction = new Function<Author, Stream<Book>>() {
+            @Override
+            public Stream<Book> apply(Author author) {
+                return author.books.stream();
+            }
+        };
+        ToIntFunction<Book> priceGetterFunction = new ToIntFunction<Book>() {;
+            @Override
+            public int applyAsInt(Book book) {
+                return book.price;
+            }
+        };
+        DoubleConsumer averagePrinterConsumer = average -> System.out.println("Average price: $" + (int) average);
+
+        authors
+                .stream()
+                .flatMap(bookStreamGetterFunction)
+                .mapToInt(priceGetterFunction)
+                .average().ifPresent(averagePrinterConsumer);
 
         banner("Average price for all books in the library - lambda");
-        // TODO With functional interfaces used directly
+        // SOLVED With functional interfaces used directly
+        authors.stream()
+                .flatMap(author -> author.books.stream())
+                .mapToInt(book -> book.price)
+                .average().ifPresent( average -> System.out.println("Average price: $" + (int) average));
 
         banner("Active authors that have at least one published book");
-        // TODO With functional interfaces declared
+        // SOLVED With functional interfaces declared
+        Consumer<Author> activeAuthorWithBookPrintConsumer = new Consumer<Author>() {
+            @Override
+            public void accept(Author author) {
+                if (author.active && !author.books.isEmpty() && author.books.stream().anyMatch(book -> book.published)) {
+                    System.out.println(author);
+                }
+            }
+        };
+        authors
+                .stream()
+                .forEach(activeAuthorWithBookPrintConsumer);
 
         banner("Active authors that have at least one published book - lambda");
-        // TODO With functional interfaces used directly
+        // SOLVED With functional interfaces used directly
+        authors.stream()
+                .filter(author -> author.active && !author.books.isEmpty() && author.books.stream().anyMatch(book -> book.published))
+                .forEach(System.out::println);
 
     }
 
